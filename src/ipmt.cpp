@@ -1,15 +1,11 @@
-﻿// pmt.cpp : Defines the entry point for the application.
+﻿// ipmt.cpp : Defines the entry point for the application.
 //
 
 #include "ipmt.h"
 #include "Text.h"
-// #include "SlidingWindow.h"
-// #include "KMP.h"
-// #include "BoyerMoore.h"
-// #include "Sellers.h"
-// #include "WuManber.h"
-// #include "AhoCorasick.h"
 #include "BenchmarkTimer.h"
+#include "SuffixArray.h"
+#include "LZ77.h"
 #include <getopt.h>
 #include <map>
 #include <memory>
@@ -40,16 +36,19 @@ void PrintHelp()
 	printf("----------------------\n");
 }
 
+char PatternFile[128] = "";
+char PatternArg[128] = "";
+bool PrintCount = false;
+bool Help = false;
+
+void Index();
+void Search();
+void Zip();
+void Unzip();
+
 int main(int argc, char** argv)
 {
 	static int Option = -1;
-	static int EditDistance = 0;
-	static char PatternFile[128] = "";
-	static char AlgorithName[128] = "";
-	static char PatternArg[128] = "";
-	static bool PrintCount = false;
-	static bool Help = false;
-	static bool OptAhoCorasick = true;
 
 	static int OptionIndex = 0;
 
@@ -57,28 +56,17 @@ int main(int argc, char** argv)
 	{
 		{"count", no_argument, 0, 'c'},
 		{"help", no_argument, 0, 'h'},
-		{"noacopt", no_argument, 0, 'n'},
-		{"algorithm", required_argument, 0, 'a'},
-		{"pattern", required_argument, 0, 'p'},
-		{"edit", required_argument, 0, 'e'},
+		{"pattern", required_argument, 0, 'p'}
 	};
 	
-	while ((Option = getopt_long(argc, argv, "a:ce:hnp:", LongOptions, &OptionIndex)) != -1)
+	while ((Option = getopt_long(argc, argv, "chp:", LongOptions, &OptionIndex)) != -1)
 	{
 		switch (Option)
 		{
-			case 'e':
-				EditDistance = atoi(optarg);
-				break;
-			
 			case 'p':
 				strcpy(PatternFile, optarg);
 				break;
 
-			case 'a':
-				strcpy(AlgorithName, optarg);
-				break;
-			
 			case 'c':
 				PrintCount = true;
 				break;
@@ -87,16 +75,13 @@ int main(int argc, char** argv)
 				Help = true;
 				break;
 
-			case 'n':
-				OptAhoCorasick = false;
-				break;
-
 			case '?':
 				PrintUsage();
 				return 1;
 				break;
 
 			default:
+				printf("asdjashdjash\n");
 				abort();
 				break;
 		}	
@@ -108,73 +93,102 @@ int main(int argc, char** argv)
 		return 0;
 	}
 
-	bool HasPatternFile = false;
-	int MinArgsRequired = 2;
-	const int RemainingArgs = argc - optind;
-
-	if (strcmp(PatternFile, "") != 0)
+	if (optind == argc)
 	{
-		MinArgsRequired = 1;
-		HasPatternFile = true;
+		fprintf(stderr, "Few arguments\n");
+		PrintUsage();
+		return 1;
 	}
-	else if (RemainingArgs != 0) 
+	
+	static const std::map<Text, std::function<void()>> AppModes = 
 	{
-		strcpy(PatternArg, argv[optind]);
-		optind += 1;
-	}
+		{"index", Index},
+		{"search", Search},
+		{"zip", Zip},
+		{"unzip", Unzip}
+	};
 
-	if (RemainingArgs < MinArgsRequired)
+	std::function<void()> mode = nullptr;
+	
+	if (AppModes.count(argv[optind]) == 0)
 	{
-		fprintf(stderr,"Error: Few arguments\n");
+		fprintf(stderr, "Unsuported mode %s\n", argv[optind]);
 		PrintUsage();
 		return 1;
 	}
 
-	static const int BufferSize = 1024 * 1024 * 1024;
-	static char buffer[BufferSize];
+	mode = AppModes.at(argv[optind]);
+	optind += 1;
+
+	mode();
+
+	// bool HasPatternFile = false;
+	// int MinArgsRequired = 2;
+	// const int RemainingArgs = argc - optind;
+
+	// if (strcmp(PatternFile, "") != 0)
+	// {
+	// 	MinArgsRequired = 1;
+	// 	HasPatternFile = true;
+	// }
+	// else if (RemainingArgs != 0) 
+	// {
+	// 	strcpy(PatternArg, argv[optind]);
+	// 	optind += 1;
+	// }
+
+	// if (RemainingArgs < MinArgsRequired)
+	// {
+	// 	fprintf(stderr,"Error: Few arguments\n");
+	// 	PrintUsage();
+	// 	return 1;
+	// }
+
+	// static const int BufferSize = 1024 * 1024 * 1024;
+	// static char buffer[BufferSize];
 	
-	std::vector<Text> FileList;
-	FileList.reserve(RemainingArgs);
+	// std::vector<Text> FileList;
+	// FileList.reserve(RemainingArgs);
 	
-	for (int FileIndex = optind; FileIndex < argc; FileIndex++)
-	{
-		FileList.emplace_back(argv[FileIndex]);
-	}
+	// for (int FileIndex = optind; FileIndex < argc; FileIndex++)
+	// {
+	// 	FileList.emplace_back(argv[FileIndex]);
+	// }
 
-	if (strcmp(AlgorithName, "") == 0)
-	{
-		if (EditDistance == 0)
-		{
-			if (HasPatternFile)
-				strcpy(AlgorithName, "aho_corasick");
-			else if (!HasPatternFile && strlen(PatternArg) == 1)
-				strcpy(AlgorithName, "wu_manber");
-			else if (!HasPatternFile)
-				strcpy(AlgorithName, "boyer_moore");
-		}
-		else if (EditDistance != 0)
-		{
-			if (strlen(PatternArg) <= 64)
-				strcpy(AlgorithName, "wu_manber");
-			else
-				strcpy(AlgorithName, "sellers");
-		}
-	}	
+	// if (strcmp(AlgorithName, "") == 0)
+	// {
+	// 	if (EditDistance == 0)
+	// 	{
+	// 		if (HasPatternFile)
+	// 			strcpy(AlgorithName, "aho_corasick");
+	// 		else if (!HasPatternFile && strlen(PatternArg) == 1)
+	// 			strcpy(AlgorithName, "wu_manber");
+	// 		else if (!HasPatternFile)
+	// 			strcpy(AlgorithName, "boyer_moore");
+	// 	}
+	// 	else if (EditDistance != 0)
+	// 	{
+	// 		if (strlen(PatternArg) <= 64)
+	// 			strcpy(AlgorithName, "wu_manber");
+	// 		else
+	// 			strcpy(AlgorithName, "sellers");
+	// 	}
+	// }	
 
-	bool UsingSlidingWindow = strcmp(AlgorithName, "sliding_window") == 0;
-	bool UsingKmp = strcmp(AlgorithName, "kmp") == 0;
-	bool UsingBoyerMoore = strcmp(AlgorithName, "boyer_moore") == 0;
-	bool UsingSellers = strcmp(AlgorithName, "sellers") == 0;
-	bool UsingWuManber = strcmp(AlgorithName, "wu_manber") == 0;
-	bool UsingAhoCorasick = strcmp(AlgorithName, "aho_corasick") == 0;
+	// bool UsingSlidingWindow = strcmp(AlgorithName, "sliding_window") == 0;
+	// bool UsingKmp = strcmp(AlgorithName, "kmp") == 0;
+	// bool UsingBoyerMoore = strcmp(AlgorithName, "boyer_moore") == 0;
+	// bool UsingSellers = strcmp(AlgorithName, "sellers") == 0;
+	// bool UsingWuManber = strcmp(AlgorithName, "wu_manber") == 0;
+	// bool UsingAhoCorasick = strcmp(AlgorithName, "aho_corasick") == 0;
 
-	const bool UsingSomeAlgorithm = UsingSlidingWindow + UsingKmp + UsingBoyerMoore + UsingSellers + UsingWuManber + UsingAhoCorasick;
-	if (!UsingSomeAlgorithm)
-	{
-		fprintf(stderr,"Error: Algorithm not supported/found\n");
-		PrintUsage();
-		return 1;
-	}
+	// const bool UsingSomeAlgorithm = UsingSlidingWindow + UsingKmp + UsingBoyerMoore + UsingSellers + UsingWuManber + UsingAhoCorasick;
+	// if (!UsingSomeAlgorithm)
+	// {
+	// 	fprintf(stderr,"Error: Algorithm not supported/found\n");
+	// 	PrintUsage();
+	// 	return 1;
+	// }
 
 	// static const std::map<Text, std::function<std::unique_ptr<SinglePatternSearch>()>> StrategySelector = 
 	// {
@@ -289,4 +303,25 @@ int main(int argc, char** argv)
 	// 	printf("%lld\n", TotalOccurrences);
 	
 	return 0;
+}
+
+void Index()
+{
+	printf("Index mode\n");
+}
+
+void Search()
+{
+	printf("Search mode\n");
+}
+
+void Zip()
+{
+	printf("Zip mode\n");
+	
+}
+
+void Unzip()
+{
+	printf("Unzip mode\n");
 }

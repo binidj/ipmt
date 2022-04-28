@@ -8,7 +8,10 @@ add_executable (ipmt
     "ipmt.cpp" "ipmt.h" 
     "util/Text.h" "util/Text.cpp" 
     "Constants.h" 
-    "util/BenchmarkTimer.h" "util/BenchmarkTimer.cpp")
+    "util/BenchmarkTimer.h" "util/BenchmarkTimer.cpp"
+    "compression/LZ77.h" "compression/LZ77.cpp"
+    "indexing/SuffixArray.h" "indexing/SuffixArray.cpp"
+)
 
 target_include_directories(ipmt
     PRIVATE
