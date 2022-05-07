@@ -11,6 +11,8 @@ add_executable (ipmt
     "util/BenchmarkTimer.h" "util/BenchmarkTimer.cpp"
     "compression/LZ77.h" "compression/LZ77.cpp"
     "indexing/SuffixArray.h" "indexing/SuffixArray.cpp"
+    "compression/LZ77.h" "compression/LZ77.cpp"
+    "compression/Huffman.h" "compression/Huffman.cpp"
 )
 
 target_include_directories(ipmt
