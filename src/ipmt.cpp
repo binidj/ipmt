@@ -6,6 +6,7 @@
 #include "BenchmarkTimer.h"
 #include "SuffixArray.h"
 #include "LZ77.h"
+#include "Huffman.h"
 #include <getopt.h>
 #include <map>
 #include <memory>
@@ -41,10 +42,10 @@ char PatternArg[128] = "";
 bool PrintCount = false;
 bool Help = false;
 
-void Index();
-void Search();
-void Zip();
-void Unzip();
+int Index(int argc, char** argv);
+int Search(int argc, char** argv);
+int Zip(int argc, char** argv);
+int Unzip(int argc, char** argv);
 
 int main(int argc, char** argv)
 {
@@ -100,7 +101,7 @@ int main(int argc, char** argv)
 		return 1;
 	}
 	
-	static const std::map<Text, std::function<void()>> AppModes = 
+	static const std::map<std::string, std::function<int(int, char**)>> AppModes = 
 	{
 		{"index", Index},
 		{"search", Search},
@@ -108,7 +109,7 @@ int main(int argc, char** argv)
 		{"unzip", Unzip}
 	};
 
-	std::function<void()> mode = nullptr;
+	std::function<int(int, char**)> mode = nullptr;
 	
 	if (AppModes.count(argv[optind]) == 0)
 	{
@@ -120,7 +121,7 @@ int main(int argc, char** argv)
 	mode = AppModes.at(argv[optind]);
 	optind += 1;
 
-	mode();
+	return mode(argc, argv);
 
 	// bool HasPatternFile = false;
 	// int MinArgsRequired = 2;
@@ -301,27 +302,39 @@ int main(int argc, char** argv)
 	
 	// if (PrintCount)
 	// 	printf("%lld\n", TotalOccurrences);
-	
-	return 0;
 }
 
-void Index()
+int Index(int argc, char** argv)
 {
 	printf("Index mode\n");
 }
 
-void Search()
+int Search(int argc, char** argv)
 {
 	printf("Search mode\n");
+	return 0;
 }
 
-void Zip()
+int Zip(int argc, char** argv)
 {
 	printf("Zip mode\n");
+	if (optind == argc)
+	{
+		fprintf(stderr, "Few arguments\n");
+		PrintUsage();
+		return 1;
+	}
+
+	const std::string fileName = argv[optind];
+	std::string outputFile = fileName + ".myz";
+
+	Huffman::Compress(fileName, outputFile);
 	
+	return 0;
 }
 
-void Unzip()
+int Unzip(int argc, char** argv)
 {
 	printf("Unzip mode\n");
+	return 0;
 }

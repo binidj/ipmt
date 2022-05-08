@@ -12,5 +12,13 @@ void Huffman::Compress(const std::string &inputFile, const std::string &outputFi
 
     std::vector<unsigned char> text(std::istreambuf_iterator<char>(fileStream), {});
 
-    
+    fileStream.close();
+
+    std::vector<unsigned char> codedText;
+    codedText.reserve(text.size());
+
+    // std::ofstream zipStream(outputFile, std::ios::binary);
+    // zipStream.write(reinterpret_cast<const char*>(&text[0]), text.size());
+
+    // zipStream.close();   
 }
