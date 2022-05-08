@@ -1,6 +1,8 @@
 #include <Huffman.h>
 const int ALPHABET_SIZE = 128;
 
+std::unique_ptr<Huffman::Node> Huffman::root = nullptr;
+
 void Huffman::Compress(const std::string &inputFile, const std::string &outputFile)
 {
     std::ifstream fileStream(inputFile, std::ios::binary);
@@ -15,18 +17,30 @@ void Huffman::Compress(const std::string &inputFile, const std::string &outputFi
 
     fileStream.close();
 
-    std::vector<unsigned char> codedText;
-    codedText.reserve(text.size());
+    if (text.size() == 0)
+    {
+        fprintf(stderr, "File %s is empty\n", inputFile.c_str());
+        return;
+    }
+    
+    std::vector<unsigned char> encodedText;
+    encodedText.reserve(text.size());
     const std::vector<unsigned int> frequency = GetCharFrequency(text);
 
     BuildTree(frequency);
+    PrintTree(root, 0);
 
-
-
+    Encode(text, encodedText);
     // std::ofstream zipStream(outputFile, std::ios::binary);
     // zipStream.write(reinterpret_cast<const char*>(&text[0]), text.size());
 
     // zipStream.close();   
+}
+
+void Huffman::Encode(std::vector<unsigned char> &text, std::vector<unsigned char> &encodedText)
+{
+    // std::unique_ptr<Node> cursor = std::move(root);
+    // for (int)
 }
 
 std::vector<unsigned int> Huffman::GetCharFrequency(const std::vector<unsigned char> &text)
@@ -54,10 +68,43 @@ void Huffman::BuildTree(const std::vector<unsigned int> &frequency)
         }
     }
 
-    std::make_heap(heap.begin(), heap.end());
+    std::make_heap(heap.begin(), heap.end(), std::greater<>());
 
-    for (auto &e : heap)
+    while (heap.size() > 1)
     {
-        std::cout << e->frequency << "\n";
+        std::pop_heap(heap.begin(), heap.end(), std::greater<>());
+        std::unique_ptr<Node> left = std::move(heap.back());
+        heap.pop_back();
+
+        std::pop_heap(heap.begin(), heap.end(), std::greater<>());
+        std::unique_ptr<Node> right = std::move(heap.back());
+        heap.pop_back();
+
+        std::unique_ptr<Node> parentNode = std::make_unique<Node>(
+            static_cast<char>(-1),
+            left->frequency + right->frequency,
+            std::move(left),
+            std::move(right)
+        );
+
+        heap.push_back(std::move(parentNode));
+        std::push_heap(heap.begin(), heap.end(), std::greater<>());
     }
+
+    root = std::move(heap.back()); 
+}
+
+void Huffman::PrintTree(std::unique_ptr<Node> &node, int level)
+{
+    if (node == nullptr)
+        return;
+
+    PrintTree(node->childs[1], level + 1);
+    std::cout << std::string(level*4, ' ') << "[" << int(node->symbol) << " " << node->frequency << "]\n";
+    PrintTree(node->childs[0], level + 1);    
+}
+
+bool operator<(const std::unique_ptr<Huffman::Node> &left, const std::unique_ptr<Huffman::Node> &right)
+{
+    return left->frequency < right->frequency;
 }

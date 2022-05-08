@@ -7,10 +7,11 @@
 
 class Huffman 
 {
+public:
     struct Node
     {
         char symbol;
-        int frequency;
+        unsigned int frequency;
         std::unique_ptr<Node> childs[2];
 
         Node();
@@ -18,16 +19,12 @@ class Huffman
             symbol(symbol), frequency(frequency), childs { std::move(left), std::move(right) } {};
     };
 private:
-    static std::unique_ptr<Node> root = nullptr;
-
+    static std::unique_ptr<Node> root;
+    static void PrintTree(std::unique_ptr<Node> &node, int level);
+    static void BuildTree(const std::vector<unsigned int> &frequency);
+    static std::vector<unsigned int> GetCharFrequency(const std::vector<unsigned char> &text);
+    static void Encode(std::vector<unsigned char> &text, std::vector<unsigned char> &encodedText);
 public:
     static void Compress(const std::string &inputFile, const std::string &outputFile);
     static void Decompress(const std::string &inputFile, const std::string &outputFile);
-    static std::vector<unsigned int> GetCharFrequency(const std::vector<unsigned char> &text);
-    static void BuildTree(const std::vector<unsigned int> &frequency);
 };
-
-bool operator<(const std::unique_ptr<Node> &left, const std::unique_ptr<Node> &right)
-{
-    return left->frequency < right->frequency;
-}
