@@ -2,6 +2,7 @@
 const int ALPHABET_SIZE = 128;
 
 std::unique_ptr<Huffman::Node> Huffman::root = nullptr;
+std::unordered_map<unsigned char, std::string> Huffman::huffmanCodes = nullptr;
 
 void Huffman::Compress(const std::string &inputFile, const std::string &outputFile)
 {
@@ -23,24 +24,48 @@ void Huffman::Compress(const std::string &inputFile, const std::string &outputFi
         return;
     }
     
-    std::vector<unsigned char> encodedText;
-    encodedText.reserve(text.size());
+    // std::vector<unsigned char> encodedText;
+    // encodedText.reserve(text.size());
     const std::vector<unsigned int> frequency = GetCharFrequency(text);
 
     BuildTree(frequency);
     PrintTree(root, 0);
 
-    Encode(text, encodedText);
+    Encode(text);
     // std::ofstream zipStream(outputFile, std::ios::binary);
     // zipStream.write(reinterpret_cast<const char*>(&text[0]), text.size());
 
     // zipStream.close();   
 }
 
-void Huffman::Encode(std::vector<unsigned char> &text, std::vector<unsigned char> &encodedText)
+void Huffman::GetCodes(std::unique_ptr<Huffman::Node> &cursor, std::string &codesBuffer)
 {
-    // std::unique_ptr<Node> cursor = std::move(root);
-    // for (int)
+    if (cursor->childs[0] == nullptr)
+    {
+        huffmanCodes[cursor->symbol] = codesBuffer;
+        return;
+    }
+    for (int bit = 0; bit < 2; bit++)
+    {
+        codesBuffer.emplace_back(char(bit+48));
+        GetCodes(cursor->childs[bit], codesBuffer);
+        codesBuffer.pop_back();    
+    }
+    return;
+}
+
+void Huffman::Encode(std::vector<unsigned char> &text)
+{
+    std::string codesBuffer = "";
+    huffmanCodes = std::unordered_map<unsigned char, std::string>();
+    GetCodes(root, codesBuffer);
+
+    for (size_t i = 0; i < text.size(); i++)
+    {
+
+    }
+
+    
 }
 
 std::vector<unsigned int> Huffman::GetCharFrequency(const std::vector<unsigned char> &text)
@@ -64,7 +89,7 @@ void Huffman::BuildTree(const std::vector<unsigned int> &frequency)
     {
         if (frequency[i] != 0)
         {
-            heap.emplace_back(std::make_unique<Node>(static_cast<char>(i), frequency[i]));
+            heap.emplace_back(std::make_unique<Node>(static_cast<unsigned char>(i), frequency[i]));
         }
     }
 
