@@ -28,17 +28,11 @@ void Huffman::Compress(const std::string &inputFile, const std::string &outputFi
     }
     
     const size_t fileSize = text.size();
-    // std::vector<unsigned char> encodedText;
-    // encodedText.reserve(text.size());
     const std::vector<unsigned int> frequency = GetCharFrequency(text);
 
     BuildTree(frequency);
-    PrintTree(root, 0);
 
     Encode(text);
-
-    // std::cout << fileSize << " !!! ";
-    // std::cout << sizeof(unsigned char) << " " << sizeof(unsigned int) << " !!!\n";
 
     std::ofstream zipStream(outputFile, std::ios::binary);
     zipStream.write(reinterpret_cast<const char*>(&frequency[0]), sizeof(unsigned int) * frequency.size());
@@ -86,53 +80,28 @@ void Huffman::Decompress(const std::string &inputFile, const std::string &output
     size_t fileSize = 0;
     std::memcpy(&fileSize, &text[curBytePos], sizeof(size_t));
 
-    // std::cout << fileSize << " !!! ";
-    
     curBytePos += sizeof(size_t);
 
     BuildTree(frequency);
 
-    // static_assert();
-
-    PrintTree(root, 0);
-
-    // std::cout << sizeof(size_t) << " !!!\n";
-
-    // std::unique_ptr<Node> cursor = std::move(root);
-
-    // cursor = std::move(cursor->childs[0]);
-
-    // std::cout << " !!!!!!!!!!!!!!!!! \n";
-
-    // PrintTree(root, 0);
-    // 
-    // if (cursor->childs[0] == nullptr)
-    // {
-
-    // }
     if (text.size() < fileSize)
         text.reserve(fileSize);
-
-    // std::cout << curBytePos << " " << text.size() << "\n";
     
     Node* cursor = root.get();
-    // corner case: single node tree
-    // if (cursor->childs[0] == nullptr)
-    // {
-
-    // }
-
+    
     std::queue<unsigned char> charPool;
     textIndex = 0;
-
-    // std::cout << "!!!!!\n";
-    // for (int i = curBytePos; i < text.size(); i++)
-    // {
-    //     std::cout << int(text[i]) << " ";
-    // }
-    // std::cout << "\n";
-
     size_t lastFullByte = text.size()-1;
+    
+    // corner case: single node tree
+    if (cursor->childs[0] == nullptr)
+    {
+        text.resize(fileSize);
+        std::memset(&text[0],cursor->symbol,fileSize);
+        goto WriteFile;
+    }
+
+    
     for (; curBytePos < lastFullByte; curBytePos++)
     {
         TryWriteData(charPool, text);
@@ -140,13 +109,10 @@ void Huffman::Decompress(const std::string &inputFile, const std::string &output
         for (unsigned char bitPos = 0; bitPos < 8; bitPos++)
         {
             unsigned char bitValue = text[curBytePos] & 1;
-            // std::cout << "text byte value " << int(text[curBytePos]) << "\n";
-            // std::cout << "CUR BIT VALUE : " << int(bitValue) << "\n";
             text[curBytePos] >>= 1;
             cursor = cursor->childs[bitValue].get();
             if (cursor->childs[0] == nullptr)
             {
-                // std::cout << "CURSOR AT " << cursor->symbol << " " << cursor->frequency << "\n";
                 charPool.push(cursor->symbol);
                 cursor = root.get();
             }
@@ -158,20 +124,24 @@ void Huffman::Decompress(const std::string &inputFile, const std::string &output
     for (unsigned char bitPos = 0; bitPos < lastByteBits; bitPos++)
     {
         unsigned char bitValue = text[curBytePos] & 1;
-        // std::cout << "text byte value " << int(text[curBytePos]) << "\n";
         text[curBytePos] >>= 1;
         cursor = cursor->childs[bitValue].get();
         if (cursor->childs[0] == nullptr)
         {
-            // std::cout << "CURSOR AT " << cursor->symbol << " " << cursor->frequency << "\n";
             charPool.push(cursor->symbol);
             cursor = root.get();
         }
     }
+    
     curBytePos += 1;
     TryWriteData(charPool, text);
-
-    // std::cout << curBytePos << " " << text.size() << "\n";
+    while (!charPool.empty())
+    {
+        text.emplace_back(charPool.front());
+        charPool.pop();
+    }
+    
+WriteFile:
 
     std::ofstream zipStream(outputFile, std::ios::binary);
     zipStream.write(reinterpret_cast<const char*>(&text[0]), fileSize);
@@ -182,7 +152,6 @@ inline void Huffman::TryWriteData(std::queue<unsigned char> &charBuffer, std::ve
 {
     while (textIndex < curBytePos && !charBuffer.empty())
     {
-        // std::cout << "AT POS " << textIndex << " WRITING " << charBuffer.front() << "\n";
         text[textIndex] = charBuffer.front();
         charBuffer.pop();
         textIndex += 1;
@@ -207,7 +176,6 @@ void Huffman::GetCodes(std::unique_ptr<Huffman::Node> &cursor, std::string &code
 
 inline void Huffman::SetBit(unsigned char &byte, unsigned char pos)
 {
-    // std::cout << "set bit call " << int(pos) << "\n";
     byte |= (static_cast<unsigned char>(1) << pos);
 }
 
@@ -249,31 +217,20 @@ void Huffman::Encode(std::vector<unsigned char> &text)
         
         const std::string &charCode = huffmanCodes.at(curChar);
         
-        // std::cout << "Letter " << (char)curChar << " code " << charCode << "\n";
-
         // Place current charCode
         for (size_t j = 0; j < charCode.size(); j++)
         {
             if (curBytePos > i)
             {
-                // std::cout << "if mem\n";
                 leftOverBits += charCode.substr(j);
                 break;
             }
-            // std::cout << "inserting"
             if (charCode[j] != '0') SetBit(text[curBytePos], curBitPos);
             curBitPos += 1;
             curBitPos %= 8;
             curBytePos += (curBitPos == 0);
         }
-    }    
-
-    // std::cout << "!!!!!\n";
-    // for (int i = 0; i < curBytePos; i++)
-    // {
-    //     std::cout << int(text[i]) << " ";
-    // }
-    // std::cout << "\n";
+    }
 }
 
 std::vector<unsigned int> Huffman::GetCharFrequency(const std::vector<unsigned char> &text)
