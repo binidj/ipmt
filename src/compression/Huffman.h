@@ -7,6 +7,8 @@
 #include <unordered_map>
 #include <string>
 #include <string_view>
+#include <cstring>
+#include <queue>
 
 class Huffman 
 {
@@ -25,13 +27,15 @@ private:
     static std::unique_ptr<Node> root;
     static std::unordered_map<unsigned char, std::string> huffmanCodes;
     static size_t curBytePos;
+    static size_t textIndex;
     static unsigned char curBitPos;
     static void PrintTree(std::unique_ptr<Node> &node, int level);
     static void BuildTree(const std::vector<unsigned int> &frequency);
     static std::vector<unsigned int> GetCharFrequency(const std::vector<unsigned char> &text);
     static void Encode(std::vector<unsigned char> &text);
     static void GetCodes(std::unique_ptr<Node> &cursor, std::string &codesBuffer);
-    static void SetBit(unsigned char &byte, unsigned char pos);
+    inline static void TryWriteData(std::queue<unsigned char> &charBuffer, std::vector<unsigned char> &text);
+    inline static void SetBit(unsigned char &byte, unsigned char pos);
 public:
     static void Compress(const std::string &inputFile, const std::string &outputFile);
     static void Decompress(const std::string &inputFile, const std::string &outputFile);

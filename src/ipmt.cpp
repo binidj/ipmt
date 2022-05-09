@@ -336,5 +336,25 @@ int Zip(int argc, char** argv)
 int Unzip(int argc, char** argv)
 {
 	printf("Unzip mode\n");
+	if (optind == argc)
+	{
+		fprintf(stderr, "Few arguments\n");
+		PrintUsage();
+		return 1;
+	}
+
+	const std::string fileName = argv[optind];
+	
+	if (fileName.size() < 5 || fileName.substr(fileName.size() - 4) != ".myz")
+	{
+		fprintf(stderr, "Your file must be a .myz\n");
+		PrintUsage();
+		return 1;
+	}
+
+	const std::string outputFile = fileName.substr(0, fileName.size() - 4) + "_test.txt";
+	
+	Huffman::Decompress(fileName, outputFile);
+	
 	return 0;
 }
