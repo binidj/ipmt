@@ -5,7 +5,6 @@
 #include "Text.h"
 #include "BenchmarkTimer.h"
 #include "SuffixArray.h"
-#include "LZ77.h"
 #include "Huffman.h"
 #include <getopt.h>
 #include <map>
