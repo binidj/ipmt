@@ -126,6 +126,19 @@ int main(int argc, char** argv)
 int Index(int argc, char** argv)
 {
 	printf("Index mode\n");
+	if (optind == argc)
+	{
+		fprintf(stderr, "Few arguments\n");
+		PrintUsage();
+		return 1;
+	}
+
+	const std::string fileName = argv[optind];
+	const std::string outputFile = fileName + ".idx";
+
+	SuffixArray::Index(fileName, outputFile);
+
+	return 0;
 }
 
 int Search(int argc, char** argv)
@@ -145,7 +158,7 @@ int Zip(int argc, char** argv)
 	}
 
 	const std::string fileName = argv[optind];
-	std::string outputFile = fileName + ".myz";
+	const std::string outputFile = fileName + ".myz";
 
 	Huffman::Compress(fileName, outputFile);
 	
