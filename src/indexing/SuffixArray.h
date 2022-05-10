@@ -12,10 +12,13 @@ static const int maxLog = 32;
 class SuffixArray 
 {
 private:
-    static int prevP;
-    static std::vector<int> P[maxLog];
+    static int bucketIndex;
+    static std::vector<int> buckets[maxLog];
     static std::vector<int> suffixArray;
-    static void Build_P(std::string &text);
+    static std::vector<int> leftLcp;
+    static std::vector<int> rightLcp;
+    static void BuildBucket(std::string &text);
+    static void FillLcpData(int l, int r);
 public:
     static void Index(const std::string &inputFile, const std::string &outputFile);
     static void Search(const std::string &inputFile, const std::string &pattern);
