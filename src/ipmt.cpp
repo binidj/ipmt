@@ -2,7 +2,6 @@
 //
 
 #include "ipmt.h"
-#include "Text.h"
 #include "BenchmarkTimer.h"
 #include "SuffixArray.h"
 #include "Huffman.h"
