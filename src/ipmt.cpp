@@ -36,7 +36,6 @@ void PrintHelp()
 }
 
 char PatternFile[128] = "";
-char PatternArg[128] = "";
 bool PrintCount = false;
 bool Help = false;
 
@@ -143,6 +142,43 @@ int Index(int argc, char** argv)
 int Search(int argc, char** argv)
 {
 	printf("Search mode\n");
+	int minArgs = 2;
+	std::vector<std::string> patterns; 
+	if (strcmp(PatternFile,"") != 0)
+	{
+		minArgs = 1;
+		optind += 1;
+	}
+	
+	if (argc-optind < minArgs)
+	{
+		fprintf(stderr, "Few arguments\n");
+		PrintUsage();
+		return 1;
+	}
+
+	if (minArgs == 2)
+	{
+		patterns.emplace_back(argv[optind++]);
+	}
+	else
+	{
+		// read patterns
+	}
+
+	std::string indexFile = argv[optind];
+	
+	if (indexFile.size() < 5 || indexFile.substr(indexFile.size() - 4) != ".idx")
+	{
+		fprintf(stderr, "Your index file must be a .idx\n");
+		PrintUsage();
+		return 1;
+	}
+
+	std::cout << indexFile << " !!!\n";
+
+	SuffixArray::Search(indexFile, patterns, true);
+
 	return 0;
 }
 
@@ -178,7 +214,7 @@ int Unzip(int argc, char** argv)
 	
 	if (fileName.size() < 5 || fileName.substr(fileName.size() - 4) != ".myz")
 	{
-		fprintf(stderr, "Your file must be a .myz\n");
+		fprintf(stderr, "Your compressed file must be a .myz\n");
 		PrintUsage();
 		return 1;
 	}

@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <string_view>
 #include <vector>
 #include <algorithm>
 #include <memory>
@@ -14,15 +15,24 @@ class SuffixArray
 private:
     static int logSize;
     static int textSize;
+    static int cmp;
+    static long long occCount;
+    static std::string text;
     static std::vector<int> buckets[maxLog];
     static std::vector<int> suffixArray;
     static std::vector<int> leftLCP;
     static std::vector<int> rightLCP;
     static std::vector<int> frequency;
-    static void BuildBucket(std::string &text);
+    static std::vector<int> occurences;
+    static void BuildBucket();
     static void FillLCPData(int l, int r);
     static int LCP(int leftSuffix, int rightSuffix);
+    static void RebuildText(std::string &text);
+    static void SearchWord(const std::string &pattern);
+    static int Successor(const std::string &pattern);
+    static int Predecessor(const std::string &pattern);
+    static int LexCmp(const std::string_view &lhs, const std::string_view &rhs);
 public:
     static void Index(const std::string &inputFile, const std::string &outputFile);
-    static void Search(const std::string &inputFile, const std::string &pattern);
+    static void Search(const std::string &indexFile, const std::vector<std::string> &patterns, bool printCount);
 };
