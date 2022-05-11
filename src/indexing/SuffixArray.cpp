@@ -19,7 +19,6 @@ void SuffixArray::BuildBucket()
 {
     int n = text.size(), c = 0;
     std::vector<int> temp(n), posBucket(n), bucket(n), bpos(n);
-    // suffixArray.resize(n);
     
     buckets[logSize] = std::vector<int>(n);
 
@@ -38,7 +37,7 @@ void SuffixArray::BuildBucket()
     }
     
     logSize = 1;
-    for (int h = 1; h < n && c < n; h <<= 1) 
+    for (int h = 1; h <= n; h <<= 1) 
     {
         for (int i = 0; i < n; i++) posBucket[suffixArray[i]] = bucket[i];
         
@@ -51,31 +50,31 @@ void SuffixArray::BuildBucket()
             if (suffixArray[i] >= h) temp[bpos[posBucket[suffixArray[i] - h]]++] = suffixArray[i] - h;
         
         c = 0;
-        int order = 0;
         buckets[logSize] = std::vector<int>(n);
         for (int i = 0; i + 1 < n; i++) 
         {
             int a = (bucket[i] != bucket[i + 1]) || (temp[i] >= n - h) || (posBucket[temp[i + 1] + h] != posBucket[temp[i] + h]);
-            buckets[logSize][suffixArray[i]] = c;
+            buckets[logSize][temp[i]] = c;
             bucket[i] = c;
             c += a;
         }
-        buckets[logSize][suffixArray[n - 1]] = c;
+        buckets[logSize][temp[n - 1]] = c;
         bucket[n - 1] = c++;
         logSize += 1;
         temp.swap(suffixArray);
     }
 
     // print buckets's
-    for (int i = 0; i <= logSize; i++)
-    {
-        std::cout << "LOG " << i << ": ";
-        for (int j = 0; j < n; j++)
-        {
-            std::cout << buckets[i][j] << " ";
-        }
-        std::cout << "\n";
-    }
+    // std::cout << logSize << " !!! \n";
+    // for (int i = 0; i < logSize; i++)
+    // {
+    //     std::cout << "LOG " << i << ": ";
+    //     for (int j = 0; j < n; j++)
+    //     {
+    //         std::cout << buckets[i][j] << " ";
+    //     }
+    //     std::cout << "\n";
+    // }
 }
 
 int SuffixArray::LCP(int leftSuffix, int rightSuffix)
@@ -97,7 +96,6 @@ int SuffixArray::LCP(int leftSuffix, int rightSuffix)
                 leftSuffix += jump;
                 rightSuffix += jump;
             }
-            log -= 1;
         }
 
         return lcp;
@@ -174,12 +172,6 @@ void SuffixArray::Index(const std::string &inputFile, const std::string &outputF
     outputStream.write(reinterpret_cast<char const*>(&logSize), sizeof(logSize));
     outputStream.write(reinterpret_cast<char const*>(&textSize), sizeof(textSize));
 
-    // // write buckets
-    // for (int i = 0; i < logSize; i++)
-    // {
-    //     outputStream.write(reinterpret_cast<char const*>(buckets[i].data()), textSize * sizeof(int));
-    // }
-
     // write suffix array data
     outputStream.write(reinterpret_cast<char const*>(suffixArray.data()), textSize * sizeof(int));
     outputStream.write(reinterpret_cast<char const*>(leftLCP.data()), textSize * sizeof(int));
@@ -189,7 +181,7 @@ void SuffixArray::Index(const std::string &inputFile, const std::string &outputF
     outputStream.write(reinterpret_cast<char*>(frequency.data()), ALPHABET_SIZE * sizeof(int));
 }
 
-void SuffixArray::RebuildText(std::string &text)
+void SuffixArray::RebuildText()
 {
     int index = 0;
     for (int ch = 0; ch < ALPHABET_SIZE; ch++)
@@ -203,6 +195,8 @@ void SuffixArray::RebuildText(std::string &text)
 
 int SuffixArray::LexCmp(const std::string_view &lhs, const std::string_view &rhs)
 {
+    std::cout << "comparing " << lhs << " with " << rhs << "\n";
+    
     int lcp = 0;
     
     const int lsize = lhs.size();
@@ -240,7 +234,7 @@ int SuffixArray::LexCmp(const std::string_view &lhs, const std::string_view &rhs
 int SuffixArray::Successor(const std::string &pattern)
 {
     const int patternSize = pattern.size();
-    
+
     int L = LexCmp(pattern, std::string_view(&text[suffixArray[0]], textSize-suffixArray[0]));
     if (cmp <= 0)
         return 0;
@@ -345,15 +339,12 @@ void SuffixArray::SearchWord(const std::string &pattern)
     int rightBorder = Predecessor(pattern);
 
     // Add to occurences array
-    std::cout << leftBorder << " " << rightBorder << " !!!\n";
     if (leftBorder <= rightBorder)
-        occCount += (suffixArray[rightBorder]-suffixArray[leftBorder]+1);
+        occCount += (rightBorder-leftBorder+1);
 }
 
 void SuffixArray::Search(const std::string &indexFile, const std::vector<std::string> &patterns, bool printCount)
 {
-    std::cout << "meme\n";
-    
     std::ifstream inputStream(indexFile);
 
     if (inputStream.fail())
@@ -365,14 +356,6 @@ void SuffixArray::Search(const std::string &indexFile, const std::vector<std::st
     inputStream.read(reinterpret_cast<char*>(&logSize), sizeof(int));
     inputStream.read(reinterpret_cast<char*>(&textSize), sizeof(int));
 
-    std::cout << logSize << " " << textSize << " leu os sizes\n";
-
-    // for (int i = 0; i < logSize; i++)
-    // {
-    //     buckets[i] = std::vector<int>(textSize);
-    //     inputStream.read(reinterpret_cast<char*>(buckets[i].data()), textSize * sizeof(int));
-    // }
-
     suffixArray = std::vector<int>(textSize);
     leftLCP = std::vector<int>(textSize);
     rightLCP = std::vector<int>(textSize);
@@ -382,19 +365,29 @@ void SuffixArray::Search(const std::string &indexFile, const std::vector<std::st
     inputStream.read(reinterpret_cast<char *>(leftLCP.data()), textSize * sizeof(int));
     inputStream.read(reinterpret_cast<char *>(rightLCP.data()), textSize * sizeof(int));   
 
-    std::cout << " leu arrays\n";
-
     inputStream.read(reinterpret_cast<char*>(frequency.data()), ALPHABET_SIZE * sizeof(int));
+        
+    // for (auto e : suffixArray)
+    // {
+    //     std::cout << e << " ";
+    // }
+    // std::cout << "\n";
     
-    std::cout << "read all\n";
-    
-    std::string text(textSize, ' ');
-    RebuildText(text);
+    // for (auto e : leftLCP)
+    // {
+    //     std::cout << e << " ";
+    // }
+    // std::cout << "\n";
 
-    std::cout << "Original text : " << text << "\n";
+    // for (auto e : rightLCP)
+    // {
+    //     std::cout << e << " ";
+    // }
+    // std::cout << "\n";
 
-    std::cout << "rebuild text\n";
-    
+    text = std::string(textSize, ' ');
+    RebuildText();    
+
     for (const std::string &pattern : patterns)
     {
         SearchWord(pattern);    

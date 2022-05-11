@@ -27,7 +27,7 @@ private:
     static void BuildBucket();
     static void FillLCPData(int l, int r);
     static int LCP(int leftSuffix, int rightSuffix);
-    static void RebuildText(std::string &text);
+    static void RebuildText();
     static void SearchWord(const std::string &pattern);
     static int Successor(const std::string &pattern);
     static int Predecessor(const std::string &pattern);
