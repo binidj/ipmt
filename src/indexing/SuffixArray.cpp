@@ -7,17 +7,18 @@ std::vector<int> SuffixArray::suffixArray;
 std::vector<int> SuffixArray::leftLCP;
 std::vector<int> SuffixArray::rightLCP;
 std::vector<int> SuffixArray::frequency;
-std::vector<int> SuffixArray::occurences;
+std::set<int> SuffixArray::occurences;
 std::string SuffixArray::text;
 int SuffixArray::logSize = 0;
 int SuffixArray::textSize = 0;
 long long int SuffixArray::occCount = 0;
 int SuffixArray::cmp = 0;
+bool SuffixArray::processLines = false;
 
 // Build lcp array with radix sort
 void SuffixArray::BuildBucket()
 {
-    int n = text.size(), c = 0;
+    int n = textSize, c = 0;
     std::vector<int> temp(n), posBucket(n), bucket(n), bpos(n);
     
     buckets[logSize] = std::vector<int>(n);
@@ -130,7 +131,7 @@ void SuffixArray::Index(const std::string &inputFile, const std::string &outputF
     text = std::string(size, ' ');
     inputStream.seekg(0);
     inputStream.read(&text[0], size);
-    
+
     if (size == 0)
     {
         fprintf(stderr, "File %s is empty\n", inputFile.c_str());
@@ -150,23 +151,26 @@ void SuffixArray::Index(const std::string &inputFile, const std::string &outputF
 
     std::ofstream outputStream(outputFile);
     
-    for (auto e : suffixArray)
-    {
-        std::cout << e << " ";
-    }
-    std::cout << "\n";
+    // std::cout << suffixArray.size() << "\n";
+    // for (auto e : suffixArray)
+    // {
+    //     std::cout << e << " ";
+    // }
+    // std::cout << "\n";
     
-    for (auto e : leftLCP)
-    {
-        std::cout << e << " ";
-    }
-    std::cout << "\n";
+    // std::cout << leftLCP.size() << "\n";
+    // for (auto e : leftLCP)
+    // {
+    //     std::cout << e << " ";
+    // }
+    // std::cout << "\n";
 
-    for (auto e : rightLCP)
-    {
-        std::cout << e << " ";
-    }
-    std::cout << "\n";
+    // std::cout << rightLCP.size() << "\n";
+    // for (auto e : rightLCP)
+    // {
+    //     std::cout << e << " ";
+    // }
+    // std::cout << "\n";
 
     // write sizes
     outputStream.write(reinterpret_cast<char const*>(&logSize), sizeof(logSize));
@@ -195,8 +199,6 @@ void SuffixArray::RebuildText()
 
 int SuffixArray::LexCmp(const std::string_view &lhs, const std::string_view &rhs)
 {
-    std::cout << "comparing " << lhs << " with " << rhs << "\n";
-    
     int lcp = 0;
     
     const int lsize = lhs.size();
@@ -247,7 +249,7 @@ int SuffixArray::Successor(const std::string &pattern)
 
     std::string_view lPattern(&pattern[L], patternSize-L);
     std::string_view rPattern(&pattern[R], patternSize-R);
-
+    
     while (r-l > 1)
     {
         int h = (l+r)/2;
@@ -274,9 +276,9 @@ int SuffixArray::Successor(const std::string &pattern)
         }
 
         if (H == patternSize || pattern[H] <= text[suffixArray[h]+H])
-            r = h, R = H;
+            r = h, R = H, rPattern = std::string_view(&pattern[R], patternSize-R);
         else
-            l = h, L = H;
+            l = h, L = H, lPattern = std::string_view(&pattern[L], patternSize-L);
     }
 
     return r;
@@ -325,9 +327,9 @@ int SuffixArray::Predecessor(const std::string &pattern)
         }
 
         if (H == patternSize || pattern[H] > text[suffixArray[h]+H])
-            l = h, L = H;
+            l = h, L = H, lPattern = std::string_view(&pattern[L], patternSize-L);
         else
-            r = h, R = H;
+            r = h, R = H, rPattern = std::string_view(&pattern[R], patternSize-R);
     }
 
     return l;
@@ -337,6 +339,13 @@ void SuffixArray::SearchWord(const std::string &pattern)
 {
     int leftBorder = Successor(pattern);
     int rightBorder = Predecessor(pattern);
+
+    // std::cout << leftBorder << " " << rightBorder << " ### \n";
+    if (processLines)
+    {
+        for (int i = leftBorder; i <= rightBorder; i++)
+            occurences.insert(suffixArray[i]);
+    }
 
     // Add to occurences array
     if (leftBorder <= rightBorder)
@@ -367,6 +376,8 @@ void SuffixArray::Search(const std::string &indexFile, const std::vector<std::st
 
     inputStream.read(reinterpret_cast<char*>(frequency.data()), ALPHABET_SIZE * sizeof(int));
         
+    processLines = !printCount;
+    
     // for (auto e : suffixArray)
     // {
     //     std::cout << e << " ";
@@ -388,14 +399,44 @@ void SuffixArray::Search(const std::string &indexFile, const std::vector<std::st
     text = std::string(textSize, ' ');
     RebuildText();    
 
+    // std::cout << "REBUILD TEXT: \n" << textSize << "\n";
+
+    if (processLines)
+        occurences = std::set<int>();
+
     for (const std::string &pattern : patterns)
     {
         SearchWord(pattern);    
     }
 
-    if (!printCount)
+    if (processLines)
     {
-        // print text lines
+        for (auto it = occurences.begin(); it != occurences.end(); it++)
+        {
+            int l = *it, r = *it;
+            
+            while (l >= 0 && text[l] != '\n')
+                l--;
+            
+            while (r < textSize && text[r] != '\n')
+                r++;
+
+            l++;
+            
+
+            std::cout << "Line size: " << (r-l) << "\n";
+            // std::cout << l << " " << *it << " " << r << "\n";
+            // printf("%s\n", std::string_view(&text[l], r-l).data());
+            bool flag = false;
+
+            while (it != occurences.end() && l >= *it && *it < r)
+                it++, flag = true;
+
+            if (flag) it--;
+
+            if (it == occurences.end())
+                break;
+        }
     }
     else 
     {

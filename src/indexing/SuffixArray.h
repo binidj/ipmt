@@ -7,8 +7,10 @@
 #include <iostream>
 #include <fstream>
 #include <limits.h>
+#include <set>
 
-static const int maxLog = 32;
+static const int maxLog = 25;
+static const int maxSize = 25000000;
 
 class SuffixArray 
 {
@@ -17,13 +19,15 @@ private:
     static int textSize;
     static int cmp;
     static long long occCount;
+    static bool processLines;
     static std::string text;
     static std::vector<int> buckets[maxLog];
     static std::vector<int> suffixArray;
     static std::vector<int> leftLCP;
     static std::vector<int> rightLCP;
     static std::vector<int> frequency;
-    static std::vector<int> occurences;
+    // static std::vector<int> occurences;
+    static std::set<int> occurences;
     static void BuildBucket();
     static void FillLCPData(int l, int r);
     static int LCP(int leftSuffix, int rightSuffix);

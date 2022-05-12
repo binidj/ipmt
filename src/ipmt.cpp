@@ -123,7 +123,7 @@ int main(int argc, char** argv)
 
 int Index(int argc, char** argv)
 {
-	printf("Index mode\n");
+	// printf("Index mode\n");
 	if (optind == argc)
 	{
 		fprintf(stderr, "Few arguments\n");
@@ -175,9 +175,9 @@ int Search(int argc, char** argv)
 		return 1;
 	}
 
-	std::cout << indexFile << " !!!\n";
+	// std::cout << indexFile << " !!!\n";
 
-	SuffixArray::Search(indexFile, patterns, true);
+	SuffixArray::Search(indexFile, patterns, PrintCount);
 
 	return 0;
 }
