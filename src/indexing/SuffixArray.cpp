@@ -341,15 +341,14 @@ void SuffixArray::SearchWord(const std::string &pattern)
     int rightBorder = Predecessor(pattern);
 
     // std::cout << leftBorder << " " << rightBorder << " ### \n";
+    if (leftBorder <= rightBorder)
+        occCount += (rightBorder-leftBorder+1);
+
     if (processLines)
     {
         for (int i = leftBorder; i <= rightBorder; i++)
             occurences.insert(suffixArray[i]);
     }
-
-    // Add to occurences array
-    if (leftBorder <= rightBorder)
-        occCount += (rightBorder-leftBorder+1);
 }
 
 void SuffixArray::Search(const std::string &indexFile, const std::vector<std::string> &patterns, bool printCount)
@@ -399,8 +398,6 @@ void SuffixArray::Search(const std::string &indexFile, const std::vector<std::st
     text = std::string(textSize, ' ');
     RebuildText();    
 
-    // std::cout << "REBUILD TEXT: \n" << textSize << "\n";
-
     if (processLines)
         occurences = std::set<int>();
 
@@ -411,6 +408,7 @@ void SuffixArray::Search(const std::string &indexFile, const std::vector<std::st
 
     if (processLines)
     {
+        
         for (auto it = occurences.begin(); it != occurences.end(); it++)
         {
             int l = *it, r = *it;
@@ -429,10 +427,10 @@ void SuffixArray::Search(const std::string &indexFile, const std::vector<std::st
             text[r] = prev;
             
             bool flag = false;
-
-            while (it != occurences.end() && l >= *it && *it < r)
+            
+            while ((it != occurences.end()) && (l <= *it) && (*it < r))
                 it++, flag = true;
-
+                        
             if (flag) it--;
 
             if (it == occurences.end())
