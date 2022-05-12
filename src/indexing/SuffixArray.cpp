@@ -423,10 +423,11 @@ void SuffixArray::Search(const std::string &indexFile, const std::vector<std::st
 
             l++;
             
-
-            std::cout << "Line size: " << (r-l) << "\n";
-            // std::cout << l << " " << *it << " " << r << "\n";
-            // printf("%s\n", std::string_view(&text[l], r-l).data());
+            char prev = text[r];
+            text[r] = '\0';
+            printf("%s\n", &text[l]);
+            text[r] = prev;
+            
             bool flag = false;
 
             while (it != occurences.end() && l >= *it && *it < r)
