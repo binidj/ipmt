@@ -7,14 +7,14 @@ size_t Huffman::curBytePos = 0;
 size_t Huffman::textIndex = 0;
 unsigned char Huffman::curBitPos = 0;
 
-void Huffman::Compress(const std::string &inputFile, const std::string &outputFile)
+int Huffman::Compress(const std::string &inputFile, const std::string &outputFile)
 {
     std::ifstream fileStream(inputFile, std::ios::binary);
 
     if (fileStream.fail())
     {
         fprintf(stderr, "Failed to read file %s\n", inputFile.c_str());
-        return;
+        return 1;
     }
 
     std::vector<unsigned char> text(std::istreambuf_iterator<char>(fileStream), {});
@@ -24,7 +24,7 @@ void Huffman::Compress(const std::string &inputFile, const std::string &outputFi
     if (text.size() == 0)
     {
         fprintf(stderr, "File %s is empty\n", inputFile.c_str());
-        return;
+        return 1;
     }
     
     const size_t fileSize = text.size();
@@ -40,16 +40,18 @@ void Huffman::Compress(const std::string &inputFile, const std::string &outputFi
     zipStream.write(reinterpret_cast<const char*>(&fileSize), sizeof(size_t));
     zipStream.write(reinterpret_cast<const char*>(&text[0]), curBytePos + (curBitPos != 0));
     zipStream.close();
+
+    return 0;
 }
 
-void Huffman::Decompress(const std::string &inputFile, const std::string &outputFile)
+int Huffman::Decompress(const std::string &inputFile, const std::string &outputFile)
 {
-     std::ifstream fileStream(inputFile, std::ios::binary);
+    std::ifstream fileStream(inputFile, std::ios::binary);
 
     if (fileStream.fail())
     {
         fprintf(stderr, "Failed to read file %s\n", inputFile.c_str());
-        return;
+        return 1;
     }
 
     std::vector<unsigned char> text(std::istreambuf_iterator<char>(fileStream), {});
@@ -59,7 +61,7 @@ void Huffman::Decompress(const std::string &inputFile, const std::string &output
     if (text.size() == 0)
     {
         fprintf(stderr, "File %s is empty\n", inputFile.c_str());
-        return;
+        return 1;
     }
 
     std::vector<unsigned int> frequency(ALPHABET_SIZE);
@@ -83,6 +85,7 @@ void Huffman::Decompress(const std::string &inputFile, const std::string &output
     curBytePos += sizeof(size_t);
 
     BuildTree(frequency);
+    // PrintTree(root, 0);
 
     if (text.size() < fileSize)
         text.reserve(fileSize);
@@ -146,6 +149,8 @@ WriteFile:
     std::ofstream zipStream(outputFile, std::ios::binary);
     zipStream.write(reinterpret_cast<const char*>(&text[0]), fileSize);
     zipStream.close();
+
+    return 0;
 }
 
 inline void Huffman::TryWriteData(std::queue<unsigned char> &charBuffer, std::vector<unsigned char> &text)

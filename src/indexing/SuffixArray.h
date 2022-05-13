@@ -37,6 +37,6 @@ private:
     static int Predecessor(const std::string &pattern);
     static int LexCmp(const std::string_view &lhs, const std::string_view &rhs);
 public:
-    static void Index(const std::string &inputFile, const std::string &outputFile);
-    static void Search(const std::string &indexFile, const std::vector<std::string> &patterns, bool printCount);
+    static int Index(const std::string &inputFile, const std::string &outputFile);
+    static int Search(const std::string &indexFile, const std::vector<std::string> &patterns, bool printCount);
 };

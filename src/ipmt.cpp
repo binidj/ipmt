@@ -35,6 +35,7 @@ void PrintHelp()
 	printf("----------------------\n");
 }
 
+char patternBuffer[1024] = "";
 char PatternFile[128] = "";
 bool PrintCount = false;
 bool Help = false;
@@ -123,7 +124,6 @@ int main(int argc, char** argv)
 
 int Index(int argc, char** argv)
 {
-	// printf("Index mode\n");
 	if (optind == argc)
 	{
 		fprintf(stderr, "Few arguments\n");
@@ -134,14 +134,11 @@ int Index(int argc, char** argv)
 	const std::string fileName = argv[optind];
 	const std::string outputFile = fileName + ".idx";
 
-	SuffixArray::Index(fileName, outputFile);
-
-	return 0;
+	return SuffixArray::Index(fileName, outputFile);
 }
 
 int Search(int argc, char** argv)
 {
-	printf("Search mode\n");
 	int minArgs = 2;
 	std::vector<std::string> patterns; 
 	if (strcmp(PatternFile,"") != 0)
@@ -163,7 +160,21 @@ int Search(int argc, char** argv)
 	}
 	else
 	{
-		// read patterns
+		std::ifstream patternStream(PatternFile);
+		
+		if (patternStream.fail())
+		{
+			fprintf(stderr, "Could not read pattern file %s\n", PatternFile);
+			PrintUsage();
+			return 1;
+		}
+
+		while (patternStream >> patternBuffer)
+		{
+			patterns.emplace_back(patternBuffer);
+		}
+
+		patternStream.close();
 	}
 
 	std::string indexFile = argv[optind];
@@ -175,16 +186,11 @@ int Search(int argc, char** argv)
 		return 1;
 	}
 
-	// std::cout << indexFile << " !!!\n";
-
-	SuffixArray::Search(indexFile, patterns, PrintCount);
-
-	return 0;
+	return SuffixArray::Search(indexFile, patterns, PrintCount);
 }
 
 int Zip(int argc, char** argv)
 {
-	printf("Zip mode\n");
 	if (optind == argc)
 	{
 		fprintf(stderr, "Few arguments\n");
@@ -195,14 +201,11 @@ int Zip(int argc, char** argv)
 	const std::string fileName = argv[optind];
 	const std::string outputFile = fileName + ".myz";
 
-	Huffman::Compress(fileName, outputFile);
-	
-	return 0;
+	return Huffman::Compress(fileName, outputFile);
 }
 
 int Unzip(int argc, char** argv)
 {
-	printf("Unzip mode\n");
 	if (optind == argc)
 	{
 		fprintf(stderr, "Few arguments\n");
@@ -221,7 +224,5 @@ int Unzip(int argc, char** argv)
 
 	const std::string outputFile = fileName.substr(0, fileName.size() - 4) + "_test.txt";
 	
-	Huffman::Decompress(fileName, outputFile);
-	
-	return 0;
+	return Huffman::Decompress(fileName, outputFile);
 }

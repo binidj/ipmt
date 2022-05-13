@@ -116,14 +116,14 @@ void SuffixArray::FillLCPData(int l, int r)
     FillLCPData(h, r);
 }
 
-void SuffixArray::Index(const std::string &inputFile, const std::string &outputFile)
+int SuffixArray::Index(const std::string &inputFile, const std::string &outputFile)
 {
     std::ifstream inputStream(inputFile);
 
     if (inputStream.fail())
     {
         fprintf(stderr, "Failed to read file %s\n", inputFile.c_str());
-        return;
+        return 1;
     }
 
     inputStream.seekg(0, std::ios::end);
@@ -131,11 +131,12 @@ void SuffixArray::Index(const std::string &inputFile, const std::string &outputF
     text = std::string(size, ' ');
     inputStream.seekg(0);
     inputStream.read(&text[0], size);
+    inputStream.close();
 
     if (size == 0)
     {
         fprintf(stderr, "File %s is empty\n", inputFile.c_str());
-        return;
+        return 1;
     }
 
     textSize = size;
@@ -183,6 +184,8 @@ void SuffixArray::Index(const std::string &inputFile, const std::string &outputF
 
     // write frequency
     outputStream.write(reinterpret_cast<char*>(frequency.data()), ALPHABET_SIZE * sizeof(int));
+    outputStream.close();
+    return 0;
 }
 
 void SuffixArray::RebuildText()
@@ -351,14 +354,14 @@ void SuffixArray::SearchWord(const std::string &pattern)
     }
 }
 
-void SuffixArray::Search(const std::string &indexFile, const std::vector<std::string> &patterns, bool printCount)
+int SuffixArray::Search(const std::string &indexFile, const std::vector<std::string> &patterns, bool printCount)
 {
     std::ifstream inputStream(indexFile);
 
     if (inputStream.fail())
     {
         fprintf(stderr, "Failed to read file %s\n", indexFile.c_str());
-        return;
+        return 1;
     }
 
     inputStream.read(reinterpret_cast<char*>(&logSize), sizeof(int));
@@ -374,7 +377,9 @@ void SuffixArray::Search(const std::string &indexFile, const std::vector<std::st
     inputStream.read(reinterpret_cast<char *>(rightLCP.data()), textSize * sizeof(int));   
 
     inputStream.read(reinterpret_cast<char*>(frequency.data()), ALPHABET_SIZE * sizeof(int));
-        
+
+    inputStream.close();    
+    
     processLines = !printCount;
     
     // for (auto e : suffixArray)
@@ -441,4 +446,6 @@ void SuffixArray::Search(const std::string &indexFile, const std::vector<std::st
     {
         printf("%lld\n", occCount);
     }
+
+    return 0;
 }

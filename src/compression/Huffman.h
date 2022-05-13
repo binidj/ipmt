@@ -37,6 +37,6 @@ private:
     inline static void TryWriteData(std::queue<unsigned char> &charBuffer, std::vector<unsigned char> &text);
     inline static void SetBit(unsigned char &byte, unsigned char pos);
 public:
-    static void Compress(const std::string &inputFile, const std::string &outputFile);
-    static void Decompress(const std::string &inputFile, const std::string &outputFile);
+    static int Compress(const std::string &inputFile, const std::string &outputFile);
+    static int Decompress(const std::string &inputFile, const std::string &outputFile);
 };
