@@ -17,8 +17,11 @@ int Huffman::Compress(const std::string &inputFile, const std::string &outputFil
         return 1;
     }
 
-    std::vector<unsigned char> text(std::istreambuf_iterator<char>(fileStream), {});
-
+    fileStream.seekg(0, std::ios::end);
+    size_t size = fileStream.tellg();
+    std::vector<unsigned char> text(size);
+    fileStream.seekg(0);
+    fileStream.read(reinterpret_cast<char *>(&text[0]), size);
     fileStream.close();
 
     if (text.size() == 0)
@@ -85,7 +88,6 @@ int Huffman::Decompress(const std::string &inputFile, const std::string &outputF
     curBytePos += sizeof(size_t);
 
     BuildTree(frequency);
-    // PrintTree(root, 0);
 
     if (text.size() < fileSize)
         text.reserve(fileSize);
@@ -207,6 +209,7 @@ void Huffman::Encode(std::vector<unsigned char> &text)
             {
                 if (curBytePos > i)
                 {
+                    leftOverBits += huffmanCodes.at(curChar);
                     break;
                 }
                 if (leftOverBits[j] != '0') SetBit(text[curBytePos], curBitPos);
