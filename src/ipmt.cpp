@@ -167,8 +167,8 @@ int Search(int argc, char** argv)
 			PrintUsage();
 			return 1;
 		}
-
-		while (patternStream >> patternBuffer)
+		
+		while (patternStream.getline(patternBuffer, 1024))
 		{
 			patterns.emplace_back(patternBuffer);
 		}
