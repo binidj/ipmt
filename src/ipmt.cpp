@@ -144,9 +144,8 @@ int Search(int argc, char** argv)
 	if (strcmp(PatternFile,"") != 0)
 	{
 		minArgs = 1;
-		optind += 1;
 	}
-	
+
 	if (argc-optind < minArgs)
 	{
 		fprintf(stderr, "Few arguments\n");

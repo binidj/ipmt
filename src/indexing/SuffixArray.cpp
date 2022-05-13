@@ -139,6 +139,12 @@ int SuffixArray::Index(const std::string &inputFile, const std::string &outputFi
         return 1;
     }
 
+    if (size >= maxSize)
+    {
+        fprintf(stderr, "File %s is too large (limit is %d mb)\n", inputFile.c_str(), maxSize/1000000);
+        return 1;
+    }
+
     textSize = size;
     suffixArray = std::vector<int>(textSize);
     frequency = std::vector<int>(ALPHABET_SIZE);
