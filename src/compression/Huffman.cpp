@@ -57,7 +57,13 @@ int Huffman::Decompress(const std::string &inputFile, const std::string &outputF
         return 1;
     }
 
-    std::vector<unsigned char> text(std::istreambuf_iterator<char>(fileStream), {});
+    // std::vector<unsigned char> text(std::istreambuf_iterator<char>(fileStream), {});
+    fileStream.seekg(0, std::ios::end);
+    size_t size = fileStream.tellg();
+    std::vector<unsigned char> text(size);
+    fileStream.seekg(0);
+    fileStream.read(reinterpret_cast<char *>(&text[0]), size);
+    fileStream.close();
 
     fileStream.close();
 
@@ -106,7 +112,6 @@ int Huffman::Decompress(const std::string &inputFile, const std::string &outputF
         goto WriteFile;
     }
 
-    
     for (; curBytePos < lastFullByte; curBytePos++)
     {
         TryWriteData(charPool, text);

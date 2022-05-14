@@ -4,169 +4,212 @@ echo "# INIT TEST SCRIPT"
 
 for TRIAL in 1 2 3
 do
+    echo FROM $PWD
+    cd test_data/compression/zip/
+    echo TO $PWD
+    
+    for FILE in ./*; 
+    do
+        rm $FILE
+    done
+
+    echo FROM $PWD
+    cd ../../../
+    echo TO $PWD
+
+    echo FROM $PWD
+    cd test_data/compression/unzip/gzip/
+    echo TO $PWD
+    
+    for FILE in ./*; 
+    do
+        rm $FILE
+    done
+
+    echo FROM $PWD
+    cd ../../../../
+    echo TO $PWD
+
+    echo FROM $PWD
+    cd test_data/compression/unzip/ipmt/
+    echo TO $PWD
+    
+    for FILE in ./*; 
+    do
+        rm $FILE
+    done
+
+    echo FROM $PWD
+    cd ../../../../
+    echo TO $PWD
+    
+    echo FROM $PWD
+    cd test_data/indexing/
+    echo TO $PWD
+    
+    for FILE in ./*; 
+    do
+        rm $FILE
+    done
+
+    echo FROM $PWD
+    cd ../../
+    echo TO $PWD
+
     SET=0    
     SET=$(expr $SET + 1)
-    echo "# SET $SET of trial $TRIAL"
+    echo "# Zip - Trial $TRIAL"
     
-    for ALGORITHM in sliding_window kmp boyer_moore wu_manber aho_corasick grep
+    for ALGORITHM in gzip ipmt
+    do
+        WORD=0
+        while read FILE_PATH 
+        do
+            WORD=$(expr $WORD + 1)
+            echo Doing zip $ALGORITHM with file $FILE_PATH
+            if [ "$ALGORITHM" == "ipmt" ]; 
+            then
+                (time bin/ipmt zip test_data/$FILE_PATH) 2>&1 | tee "test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
+                mv test_data/$FILE_PATH.myz test_data/compression/zip/
+            else
+                (time gzip < test_data/$FILE_PATH > test_data/$FILE_PATH.gz) 2>&1 | tee "test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
+                mv test_data/$FILE_PATH.gz test_data/compression/zip/
+            fi
+        done < test_data/compression/paths.txt
+    done
+
+    SET=$(expr $SET + 1)
+    echo "# Unzip - Trial $TRIAL"
+
+    for ALGORITHM in gzip ipmt
+    do
+        WORD=0
+        while read FILE_PATH 
+        do
+            WORD=$(expr $WORD + 1)
+            echo Doing unzip $ALGORITHM with file $FILE_PATH
+            if [ "$ALGORITHM" == "ipmt" ]; 
+            then
+                (time bin/ipmt unzip test_data/compression/zip/$FILE_PATH.myz) 2>&1 | tee "test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
+                mv test_data/compression/zip/$FILE_PATH test_data/compression/unzip/$ALGORITHM/$FILE_PATH
+            else
+                (time gzip -d -k test_data/compression/zip/$FILE_PATH.gz) 2>&1 | tee "test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
+                mv test_data/compression/zip/$FILE_PATH test_data/compression/unzip/$ALGORITHM/$FILE_PATH
+            fi
+        done < test_data/compression/paths.txt
+    done
+
+    SET=$(expr $SET + 1)
+    echo "# Indexing - Trial $TRIAL"
+
+    for ALGORITHM in ipmt
+    do
+        WORD=0
+        while read FILE_PATH 
+        do
+            WORD=$(expr $WORD + 1)
+            echo Doing indexing $ALGORITHM with file $FILE_PATH
+            if [ "$ALGORITHM" == "ipmt" ]; 
+            then
+                (time bin/ipmt index test_data/$FILE_PATH) 2>&1 | tee "test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
+                mv test_data/$FILE_PATH.idx test_data/indexing/
+            else
+                echo NOT_USED
+                # (time gzip < test_data/$FILE_PATH > test_data/$FILE_PATH.gz) 2>&1 | tee "test_data/compression/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
+                # mv test_data/$FILE_PATH.gz test_data/compression/zip/
+            fi
+        done < test_data/index_files.txt
+    done
+
+    SET=$(expr $SET + 1)
+    echo "# Search1 - Trial $TRIAL"
+
+    for ALGORITHM in pmt ipmt grep
     do
         WORD=0
         while read PATTERN 
         do
             WORD=$(expr $WORD + 1)
-            echo Doing $ALGORITHM with word $WORD
-            if [ "$ALGORITHM" != "grep" ]; 
+            echo Searching pattern $PATTERN with tool $ALGORITHM 
+            if [ "$ALGORITHM" == "ipmt" ]; 
             then
-                (time build/src/ipmt -a $ALGORITHM -c "$PATTERN" test_data/english_1024MB.txt) 2>&1 | tee "test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
+                (time bin/ipmt -c search $PATTERN test_data/indexing/index_english.txt.idx) 2>&1 | tee "test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
+            elif [ "$ALGORITHM" == "pmt" ]
+            then
+                (time bin/pmt -c $PATTERN test_data/index_english.txt) 2>&1 | tee "test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
             else
-                (time grep -c "$PATTERN" test_data/english_1024MB.txt) 2>&1 | tee "test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
+                (time grep -c $PATTERN test_data/index_english.txt) 2>&1 | tee "test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
             fi
-        done < test_data/patterns/set_$SET.txt
+        done < test_data/patterns/indexing/set_4.txt
     done
-    
-    SET=$(expr $SET + 1)
-    echo "# SET $SET of trial $TRIAL"
 
-    for ALGORITHM in sliding_window kmp boyer_moore wu_manber aho_corasick grep
+    SET=$(expr $SET + 1)
+    echo "# Search2 - Trial $TRIAL"
+
+    for ALGORITHM in pmt ipmt grep
     do
         WORD=0
         while read PATTERN 
         do
             WORD=$(expr $WORD + 1)
-            echo Doing $ALGORITHM with word $WORD
-            if [ "$ALGORITHM" != "grep" ]; 
+            echo Searching pattern $PATTERN with tool $ALGORITHM 
+            if [ "$ALGORITHM" == "ipmt" ]; 
             then
-                (time build/src/ipmt -a $ALGORITHM -c "$PATTERN" test_data/dna_200MB.txt) 2>&1 | tee "test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
-            else
-                (time grep -c "$PATTERN" test_data/dna_200MB.txt) 2>&1 | tee "test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
-            fi
-        done < test_data/patterns/set_$SET.txt
-    done
-
-    SET=$(expr $SET + 1)
-    echo "# SET $SET of trial $TRIAL"
-
-    echo FROM $PWD
-    cd test_data/patterns/set_3/
-    echo TO $PWD
-
-    for ALGORITHM in sliding_window kmp boyer_moore aho_corasick grep
-    do
-        WORD=0
-        for FILE in * 
-        do
-            WORD=$(expr $WORD + 1)
-            echo Doing $ALGORITHM with word $WORD
-            echo Doing file $FILE
-            if [ "$ALGORITHM" != "grep" ]; 
+                (time bin/ipmt -c search $PATTERN test_data/indexing/index_dna.txt.idx) 2>&1 | tee "test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
+            elif [ "$ALGORITHM" == "pmt" ];
             then
-                (time ../../../build/src/ipmt -p $FILE -a $ALGORITHM -c ../../../test_data/dna_200MB.txt) 2>&1 | tee "../../../test_data/repports/$TRIAL""_"$SET"_"$FILE"_"$ALGORITHM".txt"
+                (time bin/pmt -c $PATTERN test_data/index_dna.txt) 2>&1 | tee "test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
             else
-                (time grep -f $FILE -c ../../../test_data/dna_200MB.txt) 2>&1 | tee "../../../test_data/repports/$TRIAL""_"$SET"_"$FILE"_"$ALGORITHM".txt"
+                (time grep -c $PATTERN test_data/index_dna.txt) 2>&1 | tee "test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
             fi
-        done
+        done < test_data/patterns/indexing/set_5.txt
     done
-
-    echo FROM $PWD
-    cd ../../../
-    echo TO $PWD
     
     SET=$(expr $SET + 1)
-    echo "# SET $SET of trial $TRIAL"
+    echo "# Search File1 - Trial $TRIAL"
     
-    echo FROM $PWD
-    cd test_data/patterns/set_4
-    echo TO $PWD
-
-    for ALGORITHM in aho_corasick grep aho_corasick_2 grep_single
+    for ALGORITHM in pmt ipmt grep
     do
-        WORD=0
-        for FILE in *.txt
-        do
-            WORD=$(expr $WORD + 1)
-            echo Doing $ALGORITHM with file $FILE
-            if [ "$ALGORITHM" = "aho_corasick" ]; 
-            then
-                (time ../../../build/src/ipmt -p $FILE -a $ALGORITHM -c ../../../test_data/english_1024MB.txt) 2>&1 | tee "../../../test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
-            fi
-            if [ "$ALGORITHM" = "aho_corasick_2" ];
-            then
-                (time ../../../build/src/ipmt -p $FILE -a "aho_corasick" -c -n ../../../test_data/english_1024MB.txt) 2>&1 | tee "../../../test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
-            fi
-            if [ "$ALGORITHM" = "grep" ];
-            then
-                (time grep -f $FILE -c ../../../test_data/english_1024MB.txt) 2>&1 | tee "../../../test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
-            fi
-            if [ "$ALGORITHM" = "grep_single" ];
-            then
-                SUBWORD=0
-                while read PATTERN
-                do
-                    SUBWORD=$(expr $SUBWORD + 1)
-                    (time grep -c "$PATTERN" ../../../test_data/english_1024MB.txt) 2>&1 | tee "../../../test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$SUBWORD"_"$ALGORITHM".txt"
-                done < $FILE
-            fi
-        done
+        if [ "$ALGORITHM" == "ipmt" ]; 
+        then
+            (time bin/ipmt -p test_data/patterns/indexing/set_4.txt -c search test_data/indexing/index_english.txt.idx) 2>&1 | tee "test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
+        elif [ "$ALGORITHM" == "pmt" ];
+        then
+            (time bin/pmt -p test_data/patterns/indexing/set_4.txt -c test_data/index_english.txt) 2>&1 | tee "test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
+        else
+            (time grep -f test_data/patterns/indexing/set_4.txt -c test_data/index_english.txt) 2>&1 | tee "test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
+        fi
     done
-
-    echo FROM $PWD
-    cd ../../../
-    echo TO $PWD
     
     SET=$(expr $SET + 1)
-    echo "# SET $SET of trial $TRIAL"
+    echo "# Search File2 - Trial $TRIAL"
     
-    for ALGORITHM in sellers wu_manber agrep
+    for ALGORITHM in pmt ipmt grep
     do
-        WORD=0
-        while read PATTERN 
-        do
-            WORD=$(expr $WORD + 1)
-            echo Doing $ALGORITHM with word $WORD
-            if [ "$ALGORITHM" != "agrep" ]; 
-            then
-                (time build/src/ipmt -a $ALGORITHM -e 4 -c "$PATTERN" test_data/sources_200MB.txt) 2>&1 | tee "test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
-            else
-                (time agrep -4 -c "$PATTERN" test_data/sources_200MB.txt) 2>&1 | tee "test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
-            fi
-        done < test_data/patterns/set_$SET.txt
+        if [ "$ALGORITHM" == "ipmt" ]; 
+        then
+            (time bin/ipmt -p test_data/patterns/indexing/set_5.txt -c search test_data/indexing/index_dna.txt.idx) 2>&1 | tee "test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
+        elif [ "$ALGORITHM" == "pmt" ];
+        then
+            (time bin/pmt -p test_data/patterns/indexing/set_5.txt -c test_data/index_dna.txt) 2>&1 | tee "test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
+        else
+            (time grep -f test_data/patterns/indexing/set_5.txt -c test_data/index_dna.txt) 2>&1 | tee "test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
+        fi
     done
 
     SET=$(expr $SET + 1)
-    echo "# SET $SET of trial $TRIAL"
-
-    for ALGORITHM in sellers wu_manber agrep
+    echo "# Search File3 - Trial $TRIAL"
+    
+    for ALGORITHM in pmt ipmt grep
     do
-        WORD=0
-        while read PATTERN 
-        do
-            WORD=$(expr $WORD + 1)
-            echo Doing $ALGORITHM with word $WORD
-            if [ "$ALGORITHM" != "agrep" ]; 
-            then
-                (time build/src/ipmt -a $ALGORITHM -e 4 -c "$PATTERN" test_data/dna_200MB.txt) 2>&1 | tee "test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
-            else
-                (time agrep -4 -c "$PATTERN" test_data/dna_200MB.txt) 2>&1 | tee "test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
-            fi
-        done < test_data/patterns/set_$SET.txt
-    done
-
-    SET=$(expr $SET + 1)
-    echo "# SET $SET of trial $TRIAL"
-
-    for ALGORITHM in sellers wu_manber
-    do
-        WORD=0
-        while read PATTERN 
-        do
-            WORD=$(expr $WORD + 1)
-            echo Doing $ALGORITHM with word $WORD
-            if [ "$ALGORITHM" != "agrep" ]; 
-            then
-                (time build/src/ipmt -a $ALGORITHM -e $(expr $WORD - 1) -c "$PATTERN" test_data/dna_200MB.txt) 2>&1 | tee "test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
-            else
-                (time agrep -5 -c "$PATTERN" test_data/dna_200MB.txt) 2>&1 | tee "test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
-            fi
-        done < test_data/patterns/set_$SET.txt
+        if [ "$ALGORITHM" == "ipmt" ]; 
+        then
+            (time bin/ipmt -p test_data/patterns.txt -c search test_data/indexing/index_english.txt.idx) 2>&1 | tee "test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
+        elif [ "$ALGORITHM" == "pmt" ];
+        then
+            (time bin/pmt -p test_data/patterns.txt -c test_data/index_english.txt) 2>&1 | tee "test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
+        else
+            (time grep -f test_data/patterns.txt -c test_data/index_english.txt) 2>&1 | tee "test_data/repports/$TRIAL""_"$SET"_"$WORD"_"$ALGORITHM".txt"
+        fi
     done
 done

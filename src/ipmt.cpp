@@ -221,7 +221,7 @@ int Unzip(int argc, char** argv)
 		return 1;
 	}
 
-	const std::string outputFile = fileName.substr(0, fileName.size() - 4) + "_test.txt";
+	const std::string outputFile = fileName.substr(0, fileName.size() - 4);
 	
 	return Huffman::Decompress(fileName, outputFile);
 }
