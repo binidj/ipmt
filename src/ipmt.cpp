@@ -13,25 +13,24 @@
 
 void PrintUsage()
 {
-	fprintf(stderr, "\n--------PMT--------\n");
+	fprintf(stderr, "\n--------IPMT--------\n");
 	fprintf(stderr, "-------IF767-------\n\n");
-	fprintf(stderr, "Usage: pmt [options] pattern textfile [textfile...]\n");
+	fprintf(stderr, "Usages: \n");
+	fprintf(stderr, "ipmt index textfile\n");
+	fprintf(stderr, "ipmt search [options] pattern indexfile.idx\n");
+	fprintf(stderr, "ipmt zip textfile\n");
+	fprintf(stderr, "ipmt unzip textfile.myz\n");
 	fprintf(stderr, "options - check \'pmt --help\' for more information\n");
 	fprintf(stderr, "pattern - pattern to be searched\n");
 	fprintf(stderr, "textfile - text file path.\n");
-	fprintf(stderr, "More than one text file can be processed with multiple arguments or wildcards\n");
 }
 
 void PrintHelp()
 {
 	printf("--ADDITIONAL OPTIONS--\n");
-	printf("-e | --edit emax - Search all ocurrences of the specified pattern with a max distance emax\n");
 	printf("-p | --pattern patternfile - Specifies the file from which patterns will be read and used on the search\n");
-	printf("-a | --algorithm algorithm_name - Specifies the algorith that will be used on the pattern search\n");
-	printf("algorithm_name = sliding_window | kmp | boyer_moore | sellers | wu_manber | aho_corasick\n");
 	printf("-c | --count - Prints the number of ocurrences of the specified pattern on all the text files.\n");
-	printf("-n | --noacopt - disable optmization for large number of occurences when using aho_corasick algoritm\n");
-	printf("-h | --help - Basic PMT options\n");
+	printf("-h | --help - Basic IPMT options\n");
 	printf("----------------------\n");
 }
 
