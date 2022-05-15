@@ -1,6 +1,6 @@
 # IPMT
 
-CLI Application to search pattern on text files. It is part of the first college project of **IF767 - Processamento de Cadeias de Caracteres**, course of Computer Science of Federal University of Pernambuco. 
+CLI Application to search patterns on indexed files and compress/decompress files. It is part of the second college project of **IF767 - Processamento de Cadeias de Caracteres**, course of Computer Science of Federal University of Pernambuco. 
 
 
 
@@ -32,39 +32,56 @@ The application binary **ipmt** will be at **bin/** folder
 
 Run it.
 
-## Usage
-
-#### Runs the application
+## Usages
 
 ```http
-  ipmt [options] pattern textfile [textfile...]\n"
+  ipmt index textfile\n");
+```
+
+| Argument   | Type       | Description                           |
+| :---------- | :--------- | :---------------------------------- |
+| `textfile` | `path` | **Required**. Text file path to be indexed. |
+
+```http
+  ipmt search [options] pattern indexfile.idx\n");
 ```
 
 | Argument   | Type       | Description                           |
 | :---------- | :--------- | :---------------------------------- |
 | `pattern` | `string` | **Required** when not using *--pattern* option. Pattern to be searched. |
-| `textfile` | `path` | **Required**. Text file path. More than one text file can be processed with multiple arguments or wildcards. |
+| `indexfile.idx` | `path` | **Required**. Previously indexed .idx file path. |
+
+```http
+  ipmt zip textfile\n");
+```
+
+| Argument   | Type       | Description                           |
+| :---------- | :--------- | :---------------------------------- |
+| `textfile` | `path` | **Required**. Text file path to be compressed. |
+
+```http
+  ipmt unzip textfile.myz\n");
+```
+
+| Argument   | Type       | Description                           |
+| :---------- | :--------- | :---------------------------------- |
+| `textfile` | `path` | **Required**. Previously compressed .myz file path.. |
 
 ## Extra options
 
 | Command             | Function                                                |
 | --------------------| ---------------------------------------------------------------- |
-| `-e` `--edit emax` | Searches all aproximated ocurrences of the pattern with some distance *emax*
 | `-p` `--pattern patternfile` | Specifies the *file* from which patterns will be read and used on the search
-| `-a` `--algorithm algorithm_name` | Specifies the algorithm *algorithm_name* that will be used on the pattern search
 | `-c` `--count` | Prints the number of ocurrences of the specified pattern on all text files.
-| `-n` `--noacopt` | Disables optmization for large number of occurences when using *aho_corasick* algoritm.
 | `-h` `--help` | Basic IPMT options
 
 
 #### Algorithms:
-| Name         | String             |
+| Mode         | Algorithm          |
 | -------------| -------------------|
-| Sliding Window | `sliding_window`
-| KMP | `kmp`
-| Boyer Moore | `boyer_moore`
-| Sellers | `sellers`
-| Wu Mamber | `wu_mamber`
-| Aho Corasick | `aho_corasick`
+| index | `Suffix Array`
+| search | `Suffix Array`
+| zip | `Huffman`
+| unzip | `Huffman`
 
 README.md
