@@ -19,10 +19,10 @@ void PrintUsage()
 	fprintf(stderr, "ipmt index textfile\n");
 	fprintf(stderr, "ipmt search [options] pattern indexfile.idx\n");
 	fprintf(stderr, "ipmt zip textfile\n");
-	fprintf(stderr, "ipmt unzip textfile.myz\n");
+	fprintf(stderr, "ipmt unzip textfile.myz\n\n");
 	fprintf(stderr, "options - check \'pmt --help\' for more information\n");
 	fprintf(stderr, "pattern - pattern to be searched\n");
-	fprintf(stderr, "textfile - text file path.\n");
+	fprintf(stderr, "textfile - text file path.\n\n");
 }
 
 void PrintHelp()
@@ -87,6 +87,7 @@ int main(int argc, char** argv)
 	
 	if (Help)
 	{
+		PrintUsage();
 		PrintHelp();
 		return 0;
 	}
