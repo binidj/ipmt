@@ -65,7 +65,7 @@ Run it.
 
 | Argument   | Type       | Description                           |
 | :---------- | :--------- | :---------------------------------- |
-| `textfile` | `path` | **Required**. Previously compressed .myz file path.. |
+| `textfile.myz` | `path` | **Required**. Previously compressed .myz file path.. |
 
 ## Extra options
 
