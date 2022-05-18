@@ -170,7 +170,8 @@ int Search(int argc, char** argv)
 		
 		while (patternStream.getline(patternBuffer, 1024))
 		{
-			patterns.emplace_back(patternBuffer);
+			if (strcmp(patternBuffer, "") != 0)
+				patterns.emplace_back(patternBuffer);
 		}
 
 		patternStream.close();

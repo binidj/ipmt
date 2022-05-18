@@ -26,8 +26,7 @@ private:
     static std::vector<int> leftLCP;
     static std::vector<int> rightLCP;
     static std::vector<int> frequency;
-    // static std::vector<int> occurences;
-    static std::set<int> occurences;
+    static std::vector<int> occurences;
     static void BuildBucket();
     static void FillLCPData(int l, int r);
     static int LCP(int leftSuffix, int rightSuffix);

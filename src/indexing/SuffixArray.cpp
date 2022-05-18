@@ -7,7 +7,7 @@ std::vector<int> SuffixArray::suffixArray;
 std::vector<int> SuffixArray::leftLCP;
 std::vector<int> SuffixArray::rightLCP;
 std::vector<int> SuffixArray::frequency;
-std::set<int> SuffixArray::occurences;
+std::vector<int> SuffixArray::occurences;
 std::string SuffixArray::text;
 int SuffixArray::logSize = 0;
 int SuffixArray::textSize = 0;
@@ -356,7 +356,7 @@ void SuffixArray::SearchWord(const std::string &pattern)
     if (processLines)
     {
         for (int i = leftBorder; i <= rightBorder; i++)
-            occurences.insert(suffixArray[i]);
+            occurences.emplace_back(suffixArray[i]);
     }
 }
 
@@ -410,7 +410,7 @@ int SuffixArray::Search(const std::string &indexFile, const std::vector<std::str
     RebuildText();    
 
     if (processLines)
-        occurences = std::set<int>();
+        occurences = std::vector<int>();
 
     for (const std::string &pattern : patterns)
     {
@@ -419,7 +419,7 @@ int SuffixArray::Search(const std::string &indexFile, const std::vector<std::str
 
     if (processLines)
     {
-        
+        std::sort(occurences.begin(), occurences.end());
         for (auto it = occurences.begin(); it != occurences.end(); it++)
         {
             int l = *it, r = *it;
